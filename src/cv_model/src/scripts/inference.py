@@ -86,12 +86,13 @@ if __name__ == "__main__":
     img_path = '/home/elsalab/Desktop/uda22/cv/ProDA/test_20211017_145830102729.png'
     img = Image.open(img_path).convert('RGB')
     img = np.array(img, dtype=np.uint8)
-    # mask = model.inference(img)
-    # save_img = Image.fromarray(np.uint8(mask), mode='RGB')
-    # save_path = '/home/elsalab/Desktop/uda22/cv/ProDA/logs/'
-    # save_img.save(os.path.join(save_path, 'seg.png'))
-    for i in range(50):
-        time_start = time.time()
-        mask = model.inference(img)
-        time_end = time.time()
-        print(time_end-time_start)
+    mask = model.inference(img)
+    print(mask.shape)
+    save_img = Image.fromarray(np.uint8(mask), mode='RGB')
+    save_path = '/home/elsalab/Desktop/uda22/cv/ProDA/logs/'
+    save_img.save(os.path.join(save_path, 'seg.png'))
+    # for i in range(50):
+    #     time_start = time.time()
+    #     mask = model.inference(img)
+    #     time_end = time.time()
+    #     print(time_end-time_start)
