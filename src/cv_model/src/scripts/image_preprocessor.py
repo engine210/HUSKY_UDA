@@ -10,12 +10,12 @@ import torch
 import torchvision
 import torchvision.transforms as tr
 
-libs_path = os.path.join(os.path.dirname(__file__), "libs")
+libs_path = os.path.join(os.path.dirname(__file__), "proda")
 sys.path.append(libs_path)
-libs_path = os.path.join(os.path.dirname(__file__), "models")
+libs_path = os.path.join(os.path.dirname(__file__), "proda/models")
 sys.path.append(libs_path)
 
-from inference import ProDA
+from proda.inference import ProDA
 
 def callback(ros_data):
     global pub, model, count, ts_start
