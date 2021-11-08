@@ -192,5 +192,6 @@ qtcreator-*
 CATKIN_IGNORE
 
 # Custom Files
-src/cv_model/src/scripts/checkpoint/from_gta5_to_nthu_on_deeplabv2_current_model.pkl
+*.pkl
+src/cv_model/src/scripts/proda/checkpoint/from_gta5_to_nthu_on_deeplabv2_current_model.pkl
 src/rl_model/src/scripts/ID1_seg2_raw2_complex_sac_randomSpeed_for_car
