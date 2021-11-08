@@ -29,7 +29,7 @@ def main(args):
     # Init ROS node
     rospy.init_node('zed_raw_viewer', anonymous=True)
     sub = rospy.Subscriber("/camera/image_raw/compressed",
-        CompressedImage, callback, queue_size=1)
+        CompressedImage, callback, queue_size=1, buff_size=2*800*800*3*8*100)
     count = 0
     ts_start = time.perf_counter()
     try:

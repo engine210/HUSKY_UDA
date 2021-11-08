@@ -14,6 +14,7 @@ def callback(ros_data):
     np_arr = np_arr[img_len:-1]
     image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
     cv2.imshow('image_preprocessor_viewer', image_np)
+    # print(image_np.shape)
     key = cv2.waitKey(5)
     if key == ord('q'):
         rospy.signal_shutdown("User exit.")
@@ -31,7 +32,7 @@ def main(args):
     # Init ROS node
     rospy.init_node('image_preprocessor_viewer', anonymous=True)
     sub = rospy.Subscriber("/processed/img_seg/compressed",
-        CompressedImage, callback, queue_size = 1)
+        CompressedImage, callback, queue_size = 1, buff_size=2*800*800*3*8*100)
     count = 0
     ts_start = time.perf_counter()
     try:

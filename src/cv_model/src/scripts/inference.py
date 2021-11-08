@@ -15,7 +15,7 @@ class ProDA():
         self.seed = 24
         self.mean = np.array([96.2056, 101.4815, 100.8839])
         # mdoel config
-        self.resume_path = '/home/elsalab/Desktop/uda22/cv/ProDA/checkpoint/from_gta5_to_nthu_on_deeplabv2_current_model.pkl'
+        self.resume_path = '/home/elsalab/Desktop/uda22/engine/engine_husky_catkin_ws/src/cv_model/src/scripts/checkpoint/from_gta5_to_nthu_on_deeplabv2_current_model.pkl'
         self.bn = SynchronizedBatchNorm2d
         self.num_classes = 9
         self.bn_clr = True
