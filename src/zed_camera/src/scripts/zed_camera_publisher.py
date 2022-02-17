@@ -25,6 +25,7 @@ def main(args):
     init.depth_mode = sl.DEPTH_MODE.NONE
     init.camera_fps = FPS
     init.camera_resolution = sl.RESOLUTION.VGA
+    # init.camera_resolution = sl.RESOLUTION.HD720
     camera = ZedCamera(init)
     camera.runtime.enable_depth = False
 
@@ -34,6 +35,7 @@ def main(args):
     ts_start = time.perf_counter()
     while not rospy.is_shutdown():
         image_np = camera.get_image()
+        # cv2.imwrite('/media/980099FC0099E214/zed_video/tmp/' + str(count).zfill(6) + '.jpg', image_np)
         # Create CompressedImage
         msg = CompressedImage()
         msg.header.stamp = rospy.Time.now()
