@@ -1,0 +1,104 @@
+import os
+import time
+import random
+import numpy as np
+from PIL import Image
+import glob
+import cv2
+from models.deeplabv2_inference import Deeplab
+from models.sync_batchnorm import SynchronizedBatchNorm2d
+
+import torch
+import torch.nn.functional as F
+
+class ProDA():
+    def __init__(self):
+        self.seed = 24
+        self.mean = np.array([96.2056, 101.4815, 100.8839])
+        # mdoel config
+        self.resume_path = '/home/elsalab/Desktop/uda22/engine/engine_husky_catkin_ws/src/cv_model/src/scripts/proda/checkpoint/from_gta5_to_nthu_on_deeplabv2_current_model.pkl'
+        self.bn = SynchronizedBatchNorm2d
+        self.num_classes = 9
+        self.bn_clr = True
+
+        torch.manual_seed(self.seed)
+        torch.cuda.manual_seed(self.seed)
+        np.random.seed(self.seed)
+        random.seed(self.seed)
+        
+        self.model = Deeplab(self.bn, num_classes=self.num_classes, bn_clr=self.bn_clr)
+        checkpoint = torch.load(self.resume_path)['ResNet101']["model_state"]
+        self.model.load_state_dict(checkpoint)
+
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else 'cpu')
+        print('device:', self.device)
+        self.model = self.model.to(self.device)
+        self.model.eval()
+        self.model.zero_grad(set_to_none=True)
+
+        colors = [
+            [128, 64, 128],
+            [244, 35, 232],
+            [70, 70, 70],
+            [107, 142, 35],
+            [152, 251, 152],
+            [70, 130, 180],
+            # [0, 0, 0],
+            [220, 20, 60],
+            [0, 0, 142],
+            [119, 11, 32],
+        ]
+
+        self.label_colors = dict(zip(range(9), colors))
+
+    def inference(self, img):
+        # process image
+        img = img.astype(np.float64)
+        img -= self.mean
+        img = img.transpose(2, 0, 1)
+        img = img[np.newaxis, :]
+        img = torch.from_numpy(img).float()
+        img = img.to(self.device)
+        with torch.no_grad():
+            # inference with model
+            outs = self.model(img)
+        outs = F.interpolate(outs, size=img.size()[2:], mode='bilinear', align_corners=True)
+        pred = outs.data.max(1)[1].cpu().numpy()
+        # convert to colorized mask
+        colorized_mask = self.decode_segmap(pred[0])
+        return colorized_mask
+
+    def decode_segmap(self, pred):
+        r = pred.copy()
+        g = pred.copy()
+        b = pred.copy()
+        for l in range(0, self.num_classes):
+            r[pred == l] = self.label_colors[l][2]
+            g[pred == l] = self.label_colors[l][1]
+            b[pred == l] = self.label_colors[l][0]
+
+        rgb = np.zeros((pred.shape[0], pred.shape[1], 3))
+        rgb[:, :, 0] = r
+        rgb[:, :, 1] = g
+        rgb[:, :, 2] = b
+        return rgb
+
+if __name__ == "__main__":
+    model = ProDA()
+    # DIR = '/media/980099FC0099E214/zed_video/HD720_SN27035985_14-53-14_imgs'
+    # DIR = '/media/980099FC0099E214/zed_video/HD720_SN27035985_15-25-50_imgs'
+    # DIR = '/media/980099FC0099E214/zed_video/HD720_SN27035985_15-30-31_imgs'
+    # DIR = '/media/980099FC0099E214/zed_video/video20211121_162150633542'
+    DIR = '/media/980099FC0099E214/zed_video/video20211121_160652885617'
+
+    for img_path in glob.glob(os.path.join(DIR, '*.jpg')):
+        if '_' in img_path.split('/')[-1]: continue
+
+        print(img_path)
+        img = Image.open(img_path).convert('RGB')
+        img = np.array(img, dtype=np.uint8)
+        mask = model.inference(img)
+        save_name = img_path.replace('.jpg', '_pred_resnet.jpg')
+        print(save_name)
+        # print(mask.shape)
+        cv2.imwrite(save_name, mask)
