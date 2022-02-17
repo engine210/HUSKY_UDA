@@ -5,8 +5,11 @@ import cv2
 import rospy
 from sensor_msgs.msg import CompressedImage
 
+recording = False
+save_dir = ''
+
 def callback(ros_data):
-    global count, ts_start
+    global count, ts_start, recording, save_dir
     data = ros_data.data
     img_len = int(data[-16:].decode('ascii'))
     data = data[:-16]
@@ -19,6 +22,14 @@ def callback(ros_data):
     if key == ord('q'):
         rospy.signal_shutdown("User exit.")
         return
+    # if key == ord('r'):
+    #     recording = True
+    #     save_dir = 'video' + datetime.datetime.now().strftime("%Y%m%d_%H%M%S%f")
+    #     os.mkdir('/media/980099FC0099E214/zed_video/' + save_dir)
+    # if key == ord('s'):
+    #     recording = False
+    # if recording:
+    #     cv2.imwrite('/media/980099FC0099E214/zed_video/' + save_dir + '/' + str(count).zfill(6) + '.jpg', image_np)
     count += 1
     delta = time.perf_counter() - ts_start
     # Log
