@@ -10,12 +10,21 @@ import torch
 import torchvision
 import torchvision.transforms as tr
 
-libs_path = os.path.join(os.path.dirname(__file__), "proda")
+cvmodel = "proda"
+cvmodel = "rainbow"
+cvmodel = "dacs"
+
+libs_path = os.path.join(os.path.dirname(__file__), cvmodel)
 sys.path.append(libs_path)
-libs_path = os.path.join(os.path.dirname(__file__), "proda/models")
+libs_path = os.path.join(os.path.dirname(__file__), cvmodel + "/models")
 sys.path.append(libs_path)
 
-from proda.inference import ProDA
+if cvmodel == "rainbow":
+    from rainbow.inference import Rainbow
+elif cvmodel == "dacs":
+    from dacs.inference import DACS
+elif cvmodel == "proda":
+    from proda.inference import ProDA
 
 def callback(ros_data):
     global pub, model, count, ts_start
@@ -23,6 +32,7 @@ def callback(ros_data):
     np_arr = np.fromstring(ros_data.data, np.uint8)
     image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
     img = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
+    img = cv2.resize(img, (640, 360))
 
     color_segmentation = model.inference(img)[:, :, ::-1]
     # print('inference time:', time.time() - start_time)
@@ -55,7 +65,12 @@ def main(args):
     print("Torch version", torch.__version__)
     print("TorchVision version:", torchvision.__version__)
 
-    model = ProDA()
+    if cvmodel == "rainbow":
+        model = Rainbow()
+    elif cvmodel == "dacs":
+        model = DACS()
+    elif cvmodel == "proda":
+        model = ProDA()
 
     # Init ROS node
     rospy.init_node('image_preprocessor', anonymous=True)
