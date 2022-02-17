@@ -5,8 +5,12 @@ import time
 
 class RLModel():
     def __init__(self, img_shape=(3, 84, 180)):
+    #def __init__(self, img_shape=(3, 90, 160)):
         self.img_shape = img_shape
-        self.ort_session = ort.InferenceSession("/home/elsalab/Desktop/uda22/engine/engine_husky_catkin_ws/src/rl_model/src/scripts/ID_NTHU_LIBRARY/DriverAgent-599958.onnx")
+        #self.ort_session = ort.InferenceSession("/home/elsalab/Desktop/uda22/engine/engine_husky_catkin_ws/src/rl_model/src/scripts/ID_NTHU_LIBRARY/DriverAgent-599958.onnx")
+        #self.ort_session = ort.InferenceSession("/home/elsalab/Desktop/uda22/engine/engine_husky_catkin_ws/src/rl_model/src/scripts/ID_NTHU_LIBRARY_1108/DriverAgent-149966.onnx")
+        self.ort_session = ort.InferenceSession("/home/elsalab/Desktop/uda22/engine/engine_husky_catkin_ws/src/rl_model/src/scripts/ID_NTHU_v1.2/DriverAgent-388311.onnx")
+        #self.ort_session = ort.InferenceSession("/home/elsalab/Desktop/uda22/engine/engine_husky_catkin_ws/src/rl_model/src/scripts/ID_NTHU_v2.1/DriverAgent-1500705.onnx")
         self.last_img = np.zeros(self.img_shape).astype(np.float32)
         self.last_seg = np.zeros(self.img_shape).astype(np.float32)
 
@@ -23,8 +27,9 @@ class RLModel():
         seg_stack = np.vstack((self.last_seg, seg))
 
         outputs = self.ort_session.run(None, {
-            "obs_0": [seg_stack],
-            #"obs_1": [seg_stack],
+            "obs_0": [img_stack],
+            #"obs_0": [seg_stack],
+            "obs_1": [seg_stack],
             "action_masks": [[True, True, True]]})
             #"action_masks": [[False, False, False]]})
         action = outputs[2][0][0]
