@@ -17,9 +17,21 @@ class ZedCamera():
             self.cam.close()
             if self.log: print("ZED1 : Camera handle closed")
 
+    def reset_cam(self):
+        self.cam.set_camera_settings(sl.VIDEO_SETTINGS.BRIGHTNESS, -1)
+        self.cam.set_camera_settings(sl.VIDEO_SETTINGS.CONTRAST, -1)
+        self.cam.set_camera_settings(sl.VIDEO_SETTINGS.HUE, -1)
+        self.cam.set_camera_settings(sl.VIDEO_SETTINGS.SATURATION, -1)
+        self.cam.set_camera_settings(sl.VIDEO_SETTINGS.SHARPNESS, -1)
+        self.cam.set_camera_settings(sl.VIDEO_SETTINGS.GAIN, -1)
+        self.cam.set_camera_settings(sl.VIDEO_SETTINGS.EXPOSURE, -1)
+        self.cam.set_camera_settings(sl.VIDEO_SETTINGS.WHITEBALANCE_TEMPERATURE, -1) #4600)
+
     def get_image(self, color_channel_order='bgra', termination_predicate=None):
         if self.cam is None:
             self.cam = ZedCamera.create_camera_handle_until_success(self.init, termination_predicate)
+            self.reset_cam()
+            self.print_camera_information(self.cam)
         if self.cam is None:
             return None
         consecutive_failures = 0
@@ -97,10 +109,20 @@ class ZedCamera():
 
     @staticmethod
     def print_camera_information(cam):
-        print("Resolution: {0}, {1}.".format(round(cam.get_camera_information().camera_resolution.width, 2), cam.get_camera_information().camera_resolution.height))
+        print("Resolution: {0}, {1}.".format(round(cam.get_camera_information().camera_resolution.width, 2),
+                                         cam.get_camera_information().camera_resolution.height))
         print("Camera FPS: {0}.".format(cam.get_camera_information().camera_fps))
         print("Firmware: {0}.".format(cam.get_camera_information().camera_firmware_version))
         print("Serial number: {0}.\n".format(cam.get_camera_information().serial_number))
+        print("BRIGHTNESS", cam.get_camera_settings(sl.VIDEO_SETTINGS.BRIGHTNESS))
+        print("CONTRAST", cam.get_camera_settings(sl.VIDEO_SETTINGS.CONTRAST))
+        print("HUE", cam.get_camera_settings(sl.VIDEO_SETTINGS.HUE))
+        print("SATURATION", cam.get_camera_settings(sl.VIDEO_SETTINGS.SATURATION))
+        print("SHARPNESS", cam.get_camera_settings(sl.VIDEO_SETTINGS.SHARPNESS))
+        print("GAIN", cam.get_camera_settings(sl.VIDEO_SETTINGS.GAIN))
+        print("EXPOSURE", cam.get_camera_settings(sl.VIDEO_SETTINGS.EXPOSURE))
+        print("WHITEBALANCE_TEMPERATURE", cam.get_camera_settings(sl.VIDEO_SETTINGS.WHITEBALANCE_TEMPERATURE))
+        print("")
 
 if __name__ == "__main__":
     def print_help():
