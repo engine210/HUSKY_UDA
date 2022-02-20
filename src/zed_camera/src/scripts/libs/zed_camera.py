@@ -10,6 +10,10 @@ class ZedCamera():
         self.cam = None
         self.runtime = sl.RuntimeParameters()
         self.mat = sl.Mat()
+        self.res = sl.get_resolution(sl.RESOLUTION.VGA)
+        self.res.width = sl.get_resolution(sl.RESOLUTION.VGA).width
+        self.res.height = sl.get_resolution(sl.RESOLUTION.VGA).height
+        self.depth_raw = sl.Mat(self.res.width, self.res.height, sl.MAT_TYPE.F32_C4, sl.MEM.CPU)
         self.log = log
 
     def __del__(self):
@@ -46,6 +50,37 @@ class ZedCamera():
                     'bgr': cv2.cvtColor(img, cv2.COLOR_BGRA2BGR),
                     'rgb': cv2.cvtColor(img, cv2.COLOR_BGR2RGB),
                 }[color_channel_order]
+            else:
+                consecutive_failures += 1
+                if self.log: print("ZED1 : Failed to retrieve image")
+                if consecutive_failures >= 3:
+                    if self.log: print("Re-opening ZED Camera...")
+                    self.cam = ZedCamera.create_camera_handle_until_success(self.init, termination_predicate)
+                    if self.cam is None:
+                        break
+        return None
+    
+    def get_image_and_depth(self, color_channel_order='bgra', termination_predicate=None):
+        if self.cam is None:
+            self.cam = ZedCamera.create_camera_handle_until_success(self.init, termination_predicate)
+            self.reset_cam()
+            self.print_camera_information(self.cam)
+        if self.cam is None:
+            return None
+        consecutive_failures = 0
+        while termination_predicate is None or not termination_predicate():
+            err = self.cam.grab(self.runtime)
+            if err == sl.ERROR_CODE.SUCCESS:
+                self.cam.retrieve_image(self.mat, sl.VIEW.LEFT)
+                self.cam.retrieve_measure(self.depth_raw, sl.MEASURE.DEPTH)
+                img = self.mat.get_data() # color channel order is bgra
+                depth = self.depth_raw.get_data()
+                return {
+                    'bgra': img,
+                    'rgba': cv2.cvtColor(img, cv2.COLOR_BGRA2RGBA),
+                    'bgr': cv2.cvtColor(img, cv2.COLOR_BGRA2BGR),
+                    'rgb': cv2.cvtColor(img, cv2.COLOR_BGR2RGB),
+                }[color_channel_order], depth
             else:
                 consecutive_failures += 1
                 if self.log: print("ZED1 : Failed to retrieve image")

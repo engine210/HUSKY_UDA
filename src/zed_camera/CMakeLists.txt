@@ -160,6 +160,7 @@ include_directories(
 catkin_install_python(PROGRAMS
     src/scripts/zed_camera_publisher.py
     src/scripts/zed_raw_viewer.py
+    src/scripts/zed_depth_viewer.py
     DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
