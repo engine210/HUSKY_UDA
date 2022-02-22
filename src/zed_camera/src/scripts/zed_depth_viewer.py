@@ -13,9 +13,13 @@ save_dir = ''
 
 def callback(ros_data):
     global count, ts_start, recording, save_dir
-    np_arr = np.fromstring(ros_data.data, np.float32).reshape((376, 672))
+    rt = ros_data.data[-48:] # last 48 byte is rt
+    rt = np.frombuffer(rt) # [pitch, yaw, row, x, y, -z]
+    print("rt:", rt)
+    depth_raw = ros_data.data[:-48] # depth_raw
+    np_arr = np.fromstring(depth_raw, np.float32).reshape((376, 672))
     depth_image = np.clip(np_arr/-np_arr.max()+1, 0, 1)
-    print(depth_image.shape)
+    
     cv2.imshow('zed_depth_viewer', depth_image)
     key = cv2.waitKey(5)
     if key == ord('q'):
@@ -43,7 +47,7 @@ def main(args):
     global count, ts_start
     # Init ROS node
     rospy.init_node('zed_depth_viewer', anonymous=True)
-    sub = rospy.Subscriber("/camera/depth_raw/compressed",
+    sub = rospy.Subscriber("/camera/depth_rt_raw/compressed",
         CompressedImage, callback, queue_size=1, buff_size=2*800*800*3*8*100)
     count = 0
     ts_start = time.perf_counter()

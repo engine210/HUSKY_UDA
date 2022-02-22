@@ -13,12 +13,12 @@ sys.path.append(libs_path)
 from zed_camera import ZedCamera
 
 def main(args):
-    FPS = 60
+    FPS = 30
 
     # Init ROS node
     rospy.init_node('zed_camera_publisher', anonymous=True)
     pub_img = rospy.Publisher("/camera/image_raw/compressed", CompressedImage, queue_size=1)
-    pub_depth = rospy.Publisher("/camera/depth_raw/compressed", CompressedImage, queue_size=1)
+    pub_depth = rospy.Publisher("/camera/depth_rt_raw/compressed", CompressedImage, queue_size=1)
 
     # Init camera
     init = sl.InitParameters()
@@ -39,20 +39,23 @@ def main(args):
     ts_start = time.perf_counter()
     while not rospy.is_shutdown():
         # image_np = camera.get_image()
-        image_np, depth_np = camera.get_image_and_depth()
+        image_np, depth_np, rotation, translation = camera.get_image_depth_position()
+        rt = np.concatenate((rotation, translation)).tobytes() # to byte array, float64, 48 bytes in total
+        # print("rotation:", rotation)
+        # print("translation:", translation)
         # cv2.imwrite('/media/980099FC0099E214/zed_video/tmp/' + str(count).zfill(6) + '.jpg', image_np)
         # Create CompressedImage
         msg_img = CompressedImage()
-        msg_depth = CompressedImage()
+        msg_depth_rt = CompressedImage()
         msg_img.header.stamp = rospy.Time.now()
-        msg_depth.header.stamp = rospy.Time.now()
+        msg_depth_rt.header.stamp = rospy.Time.now()
         msg_img.format = "jpeg"
-        msg_depth.format = "jpeg"
+        msg_depth_rt.format = "jpeg"
         msg_img.data = np.array(cv2.imencode('.jpg', image_np)[1]).tostring()
-        msg_depth.data = depth_np.tostring()
+        msg_depth_rt.data = depth_np.tostring() + rt # append 48 byte rt in the back
         # Publish new image
         pub_img.publish(msg_img)
-        pub_depth.publish(msg_depth)
+        pub_depth.publish(msg_depth_rt)
         count += 1
         delta = time.perf_counter() - ts_start
         # Log

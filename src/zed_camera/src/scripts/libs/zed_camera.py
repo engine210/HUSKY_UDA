@@ -14,6 +14,8 @@ class ZedCamera():
         self.res.width = sl.get_resolution(sl.RESOLUTION.VGA).width
         self.res.height = sl.get_resolution(sl.RESOLUTION.VGA).height
         self.depth_raw = sl.Mat(self.res.width, self.res.height, sl.MAT_TYPE.F32_C4, sl.MEM.CPU)
+        self.py_translation = sl.Translation()
+        self.camera_pose = sl.Pose()
         self.log = log
 
     def __del__(self):
@@ -60,7 +62,7 @@ class ZedCamera():
                         break
         return None
     
-    def get_image_and_depth(self, color_channel_order='bgra', termination_predicate=None):
+    def get_image_depth_position(self, color_channel_order='bgra', termination_predicate=None):
         if self.cam is None:
             self.cam = ZedCamera.create_camera_handle_until_success(self.init, termination_predicate)
             self.reset_cam()
@@ -75,12 +77,18 @@ class ZedCamera():
                 self.cam.retrieve_measure(self.depth_raw, sl.MEASURE.DEPTH)
                 img = self.mat.get_data() # color channel order is bgra
                 depth = self.depth_raw.get_data()
+
+                self.cam.get_position(self.camera_pose)
+                rotation = self.camera_pose.get_rotation_vector()
+                translation = self.camera_pose.get_translation(self.py_translation)
+                translation_val = [round(translation.get()[0], 2), round(translation.get()[1], 2), round(translation.get()[2], 2)]
+
                 return {
                     'bgra': img,
                     'rgba': cv2.cvtColor(img, cv2.COLOR_BGRA2RGBA),
                     'bgr': cv2.cvtColor(img, cv2.COLOR_BGRA2BGR),
                     'rgb': cv2.cvtColor(img, cv2.COLOR_BGR2RGB),
-                }[color_channel_order], depth
+                }[color_channel_order], depth, rotation, translation_val
             else:
                 consecutive_failures += 1
                 if self.log: print("ZED1 : Failed to retrieve image")
@@ -122,6 +130,8 @@ class ZedCamera():
         if status != sl.ERROR_CODE.SUCCESS:
             if log: print(repr(status))
             return None
+        tracking_params = sl.PositionalTrackingParameters()
+        cam.enable_positional_tracking(tracking_params)
         return cam
 
     @staticmethod
