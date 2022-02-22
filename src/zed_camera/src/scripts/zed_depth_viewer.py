@@ -14,7 +14,7 @@ save_dir = ''
 def callback(ros_data):
     global count, ts_start, recording, save_dir
     np_arr = np.fromstring(ros_data.data, np.float32).reshape((376, 672))
-    depth_image = np.clip(np_arr/np_arr.max(), 0, 255)
+    depth_image = np.clip(np_arr/-np_arr.max()+1, 0, 1)
     print(depth_image.shape)
     cv2.imshow('zed_depth_viewer', depth_image)
     key = cv2.waitKey(5)
