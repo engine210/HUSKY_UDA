@@ -13,7 +13,7 @@ sys.path.append(libs_path)
 from zed_camera import ZedCamera
 
 def main(args):
-    FPS = 30
+    FPS = 15
 
     # Init ROS node
     rospy.init_node('zed_camera_publisher', anonymous=True)
