@@ -192,6 +192,7 @@ qtcreator-*
 CATKIN_IGNORE
 
 # Custom Files
+src/obj_flow_model/src/scripts/flow_sample_data
 RAFT
 *.pkl
 *.pth
