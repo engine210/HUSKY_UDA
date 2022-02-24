@@ -192,7 +192,7 @@ qtcreator-*
 CATKIN_IGNORE
 
 # Custom Files
-src/flow_model/src/scripts/RAFT
+RAFT
 *.pkl
 *.pth
 *.onnx
